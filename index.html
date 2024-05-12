@@ -1,7 +1,120 @@
 <!DOCTYPE html>
 <html>
-<body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
-</body>
+	<head>
+		<style>
+			input{
+				height:1.7em;
+			}
+			textarea {
+				height: 3em;
+				width: 425px;
+			}
+		</style>
+	</head>
+	<body>
+		<input id="submit" style="height:60px;width:275px" type="button" onclick= "return  RunCalculation()" value="Run Calculation" />
+		<br/>
+		<table cellpadding = 1 border = 1 cellspacing = 2>
+			<tr>
+				<td></td>
+				<th>Left</th>
+				<th>Right</th>
+			</tr>
+			<tr>
+				<td>Damage:</td>
+				<td><input id="left_damagePerHit" />&nbsp;+&nbsp;<input id="left_damageBonusPercentage" value=0 />%</td>
+				<td><input id="right_damagePerHit" />&nbsp;+&nbsp;<input id="right_damageBonusPercentage" value=0 />%</td>
+			</tr>
+			<tr>
+				<td>Over Time:</td>
+				<td><input id="left_damageOverTime" value=0 />&nbsp;&nbsp;&nbsp;<input id="left_damageOverTimeDuration" value=1 />seconds</td>
+				<td><input id="right_damageOverTime" value=0 />&nbsp;&nbsp;&nbsp;<input id="right_damageOverTimeDuration" value=1 />seconds</td>
+			</tr>
+			<tr>
+				<td>Clip Size:</td>
+				<td><input id="left_clipSize" /></td>
+				<td><input id="right_clipSize" /></td>
+			</tr>
+			<tr>
+				<td>Rate of Fire:</td>
+				<td><input id="left_rateOfFire" /> (S = 5.5; M = 8.8; F = 12.6; VF = 42)</td>
+				<td><input id="right_rateOfFire" /> (S = 5.5; M = 8.8; F = 12.6; VF = 42)</td>
+			</tr>
+			<tr>
+				<td>Reload Time:</td>
+				<td><input id="left_reloadTime" /> +/- <input id="left_reloadBonus" value="+0"/></td>
+				<td><input id="right_reloadTime" /> +/- <input id="right_reloadBonus" value="+0"/></td>
+			</tr>
+			<tr>
+				<td>Calculated:</td>
+				<td><textarea id="left_calc"></textarea></td>
+				<td><textarea id="right_calc"></textarea></td>
+			</tr>
+			<tr>
+				<th colspan=3><textarea id="compareCalc"></textarea>
+				</th>
+			</tr>
+		</table>
+		<script>
+			function RunCalculation()
+			{
+				var left_damagePerHit = parseFloat(document.getElementById("left_damagePerHit").value);
+				var left_damageOverTime = parseFloat(document.getElementById("left_damageOverTime").value);
+				var left_damageOverTimeDuration = parseFloat(document.getElementById("left_damageOverTimeDuration").value);
+				var left_damageBonusPercentage = parseFloat(document.getElementById("left_damageBonusPercentage").value);
+				var left_rateOfFire = parseFloat(document.getElementById("left_rateOfFire").value);
+				var left_clipSize = parseFloat(document.getElementById("left_clipSize").value);
+				var left_reloadTime = parseFloat(document.getElementById("left_reloadTime").value);
+				var left_reloadBonus = parseFloat(document.getElementById("left_reloadBonus").value);
+				var right_damagePerHit = parseFloat(document.getElementById("right_damagePerHit").value);
+				var right_damageOverTime = parseFloat(document.getElementById("right_damageOverTime").value);
+				var right_damageOverTimeDuration = parseFloat(document.getElementById("right_damageOverTimeDuration").value);
+				var right_damageBonusPercentage = parseFloat(document.getElementById("right_damageBonusPercentage").value);
+				var right_rateOfFire = parseFloat(document.getElementById("right_rateOfFire").value);
+				var right_clipSize = parseFloat(document.getElementById("right_clipSize").value);
+				var right_reloadTime = parseFloat(document.getElementById("right_reloadTime").value);
+				var right_reloadBonus = parseFloat(document.getElementById("right_reloadBonus").value);
+				
+				var left_damage = left_damagePerHit * (1 + (left_damageBonusPercentage / 100));
+				var left_dotPerSecond = left_damageOverTime / left_damageOverTimeDuration;
+				var left_rofPerSecond = left_rateOfFire / 10;
+				var left_simpleDps = (left_damage * left_rofPerSecond) + left_dotPerSecond;
+				var left_reloadModifier = left_reloadTime * ( (left_reloadBonus / 100));
+				var left_reloadTime = left_reloadTime + ( left_reloadBonus != 0 ? left_reloadBonus > 0 ? left_reloadModifier : -left_reloadModifier : 0 );
+				var left_dpsWithReload = (left_clipSize / (left_clipSize / left_rofPerSecond + left_reloadTime) * left_damage) + left_dotPerSecond;
+
+				var right_damage = right_damagePerHit * (1 + (right_damageBonusPercentage / 100));
+				var right_dotPerSecond = right_damageOverTime / right_damageOverTimeDuration;
+				var right_rofPerSecond = right_rateOfFire / 10;
+				var right_simpleDps = (right_damage * right_rofPerSecond) + right_dotPerSecond;
+				var right_reloadModifier = right_reloadTime * ( (right_reloadBonus / 100));
+				var right_reloadTime = right_reloadTime + ( right_reloadBonus != 0 ? right_reloadBonus > 0 ? right_reloadModifier : -right_reloadModifier : 0 );
+				var right_dpsWithReload = (right_clipSize / (right_clipSize / right_rofPerSecond + right_reloadTime) * right_damage) + right_dotPerSecond;
+				
+				var compareResults = "";
+				if (left_simpleDps > right_simpleDps)
+				{
+					compareResults = "Left Simple DPS: +" + (left_simpleDps - right_simpleDps).toFixed(2) + " dps";
+				} else
+				{
+					compareResults = "Right Simple DPS: +" + (right_simpleDps - left_simpleDps).toFixed(2) + " dps";
+				}
+				compareResults += "\n";
+				if(left_dpsWithReload > right_dpsWithReload)
+				{
+					compareResults += "Left DPS with Reload: +" + (left_dpsWithReload - right_dpsWithReload).toFixed(2) + " dps with reload (" + left_reloadTime.toFixed(2) + "s)";
+				} else
+				{
+					compareResults += "Right DPS with Reload: +" + (right_dpsWithReload - left_dpsWithReload).toFixed(2) + " dps with reload (" + right_reloadTime.toFixed(2) + "s)";
+				}
+				
+				document.getElementById("left_calc").value =	"Left Simple DPS: " + left_simpleDps.toFixed(2) + "\n" +
+																"Left DPS with Reload: " + left_dpsWithReload.toFixed(2) + " dps with reload (" + left_reloadTime.toFixed(2) + "s)";
+				document.getElementById("right_calc").value =	"Right Simple DPS: " + right_simpleDps.toFixed(2) + "\n" +
+																"Right DPS with Reload: " + right_dpsWithReload.toFixed(2) + " dps with reload (" + right_reloadTime.toFixed(2) + "s)";																
+				document.getElementById("compareCalc").value = compareResults;
+			}
+
+		</script>
+	</body>
 </html>
